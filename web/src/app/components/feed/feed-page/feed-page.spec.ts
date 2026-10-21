@@ -1,32 +1,38 @@
 import { ConfigService } from '../../../core/services/config-service';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { FeedPage } from './feed-page';
 
 describe('FeedPage', () => {
-  let component: FeedPage;
   let fixture: ComponentFixture<FeedPage>;
+  let httpTesting: HttpTestingController;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  beforeEach(() => {
+    TestBed.configureTestingModule({
       imports: [FeedPage],
       providers: [
-        provideZonelessChangeDetection(),
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ConfigService, useValue: { config: { apiUrl: '' } } },
       ],
-    }).compileComponents();
+    });
 
+    httpTesting = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(FeedPage);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  afterEach(() => httpTesting.verify());
+
+  it('should show the empty state when there are no feeds', async () => {
+    TestBed.tick();
+    httpTesting.expectOne('/feeds').flush([]);
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain('No feeds found');
   });
 });

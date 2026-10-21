@@ -1,7 +1,6 @@
 import { ConfigService } from '../../../core/services/config-service';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ArticleCard } from './article-card';
@@ -11,15 +10,14 @@ describe('ArticleCard', () => {
   let fixture: ComponentFixture<ArticleCard>;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
+    TestBed.configureTestingModule({
       imports: [ArticleCard],
       providers: [
-        provideZonelessChangeDetection(),
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ConfigService, useValue: { config: { apiUrl: '' } } },
       ],
-    }).compileComponents();
+    });
 
     fixture = TestBed.createComponent(ArticleCard);
     fixture.componentRef.setInput('article', {
@@ -34,7 +32,7 @@ describe('ArticleCard', () => {
       feedId: '1',
     });
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {

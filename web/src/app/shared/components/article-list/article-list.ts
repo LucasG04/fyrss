@@ -1,15 +1,15 @@
 import {
-  AfterViewInit,
+  afterNextRender,
   Component,
+  DestroyRef,
   inject,
   input,
   OnInit,
-  PLATFORM_ID,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ArticleCard } from '../article-card/article-card';
 import { Loader } from '../loader/loader';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import {
   fromEvent,
   filter,
@@ -23,17 +23,15 @@ import {
   from,
 } from 'rxjs';
 import { Article } from '../../types/article';
-import { isPlatformBrowser } from '@angular/common';
 
-@UntilDestroy()
 @Component({
   selector: 'app-article-list',
   imports: [ArticleCard, Loader],
   templateUrl: './article-list.html',
   styleUrl: './article-list.css',
 })
-export class ArticleList implements OnInit, AfterViewInit {
-  private readonly platformId = inject(PLATFORM_ID);
+export class ArticleList implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
 
   getArticles =
     input.required<(from: number, to: number) => Promise<Article[]>>();
@@ -46,17 +44,13 @@ export class ArticleList implements OnInit, AfterViewInit {
   private pageSize = 20;
   private isRequestInProgress = false;
 
-  ngOnInit(): void {
-    this.loadInitialArticles();
-  }
-
-  ngAfterViewInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
+  constructor() {
+    afterNextRender(() => {
       fromEvent(window, 'scroll')
         .pipe(
           // keep the stream lightweight: once per frame is enough
           auditTime(0, animationFrameScheduler),
-          untilDestroyed(this),
+          takeUntilDestroyed(this.destroyRef),
           // gate early: only continue if list is non-empty and not already requesting
           filter(() => this.articles().length > 0 && !this.isRequestInProgress),
           // compute "near bottom"
@@ -76,12 +70,16 @@ export class ArticleList implements OnInit, AfterViewInit {
           exhaustMap(() => {
             return from(this.loadMoreArticles()).pipe(
               // Keep stream alive even if loadMoreArticles rejects
-              catchError(() => EMPTY)
+              catchError(() => EMPTY),
             );
-          })
+          }),
         )
         .subscribe();
-    }
+    });
+  }
+
+  ngOnInit(): void {
+    this.loadInitialArticles();
   }
 
   async loadInitialArticles(): Promise<void> {
@@ -113,7 +111,7 @@ export class ArticleList implements OnInit, AfterViewInit {
       const currentLength = this.articles().length;
       const newArticles = await this.getArticles()(
         currentLength,
-        currentLength + this.pageSize
+        currentLength + this.pageSize,
       );
 
       if (newArticles.length === 0) {

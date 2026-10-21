@@ -24,13 +24,15 @@
   }
 
   <!-- Error Message -->
-  @if (error()) {
+  @let errorMessage =
+    error() ?? (feeds.error() ? "Failed to load RSS feeds" : null);
+  @if (errorMessage) {
     <div
       class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-6"
     >
       <div class="flex items-center gap-2">
         <i class="eva eva-close-circle" style="font-size: larger"></i>
-        {{ error() }}
+        {{ errorMessage }}
       </div>
     </div>
   }
@@ -42,11 +44,7 @@
         {{ editingFeed() ? "Edit RSS Feed" : "Add New RSS Feed" }}
       </h2>
 
-      <form
-        [formGroup]="feedForm"
-        (ngSubmit)="saveFeed()"
-        (keydown.escape)="cancelForm()"
-      >
+      <form [formRoot]="feedForm" (keydown.escape)="cancelForm()">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <!-- Name Field -->
           <div>
@@ -56,14 +54,14 @@
             <input
               type="text"
               id="name"
-              formControlName="name"
+              [formField]="feedForm.name"
               placeholder="example.com"
               class="w-full px-3 py-2 bg-main border border-main text-main rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent form-input"
-              [class.error-border]="getFieldError('name')"
+              [class.error-border]="fieldError(feedForm.name)"
             />
-            @if (getFieldError("name")) {
+            @if (fieldError(feedForm.name)) {
               <p class="text-red-500 text-sm mt-1">
-                {{ getFieldError("name") }}
+                {{ fieldError(feedForm.name) }}
               </p>
             }
           </div>
@@ -76,14 +74,14 @@
             <input
               type="url"
               id="url"
-              formControlName="url"
+              [formField]="feedForm.url"
               placeholder="https://example.com/feed.xml"
               class="w-full px-3 py-2 bg-main border border-main text-main rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent form-input"
-              [class.error-border]="getFieldError('url')"
+              [class.error-border]="fieldError(feedForm.url)"
             />
-            @if (getFieldError("url")) {
+            @if (fieldError(feedForm.url)) {
               <p class="text-red-500 text-sm mt-1">
-                {{ getFieldError("url") }}
+                {{ fieldError(feedForm.url) }}
               </p>
             }
           </div>
@@ -93,10 +91,10 @@
         <div class="flex gap-3">
           <button
             type="submit"
-            [disabled]="loading()"
+            [disabled]="saving()"
             class="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
           >
-            @if (loading()) {
+            @if (saving()) {
               <i
                 class="eva eva-loader-outline animate-spin"
                 style="font-size: larger"
@@ -118,7 +116,7 @@
   }
 
   <!-- Loading State -->
-  @if (loading() && feeds().length === 0) {
+  @if (feeds.isLoading()) {
     <div class="text-center py-8">
       <i
         class="eva eva-loader-outline animate-spin mx-auto text-red-500"
@@ -129,7 +127,7 @@
   }
 
   <!-- Empty State -->
-  @if (!loading() && feeds().length === 0 && !isCreating()) {
+  @if (feeds.hasValue() && feeds.value().length === 0 && !isCreating()) {
     <div class="text-center py-12">
       <i
         class="eva eva-radio mx-auto text-gray-400 mb-4"
@@ -149,9 +147,9 @@
   }
 
   <!-- Feeds List -->
-  @if (feeds().length > 0) {
+  @if (feeds.hasValue() && feeds.value().length > 0) {
     <div class="space-y-4">
-      @for (feed of feeds(); track feed.id) {
+      @for (feed of feeds.value(); track feed.id) {
         <div
           class="bg-main rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow duration-200 feed-card border border-main"
         >
@@ -221,10 +219,10 @@
           </button>
           <button
             (click)="deleteFeed(showDeleteConfirm()!)"
-            [disabled]="loading()"
+            [disabled]="saving()"
             class="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
           >
-            @if (loading()) {
+            @if (saving()) {
               <i
                 class="eva eva-loader-outline animate-spin"
                 style="font-size: larger"

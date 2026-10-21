@@ -1,10 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Component, effect, inject, input, untracked } from '@angular/core';
 import { ArticleService } from '../../../core/services/article-service';
 import { firstValueFrom } from 'rxjs';
 import { Article } from '../../../shared/types/article';
 import { RssFeedService } from '../../../core/services/rss-feed-service';
-import { RssFeed } from '../../../shared/types/rss-feed';
 import { ArticleList } from '../../../shared/components/article-list/article-list';
 import { Location } from '@angular/common';
 import { Loader } from '../../../shared/components/loader/loader';
@@ -17,38 +15,24 @@ import { Loader } from '../../../shared/components/loader/loader';
 })
 export class FeedArticles {
   readonly location = inject(Location);
-  private readonly route = inject(ActivatedRoute);
   private readonly articleService = inject(ArticleService);
   private readonly rssFeedService = inject(RssFeedService);
 
-  rssFeed = signal<RssFeed | null>(null);
-  isLoading = signal(true);
+  /** Bound from the `:id` route param. */
+  readonly id = input.required<string>();
+
+  readonly rssFeed = this.rssFeedService.byIdResource(this.id);
 
   constructor() {
-    const feedId = this.route.snapshot.paramMap.get('id');
-
-    if (!feedId) {
-      throw new Error('Feed ID is required');
-    }
-
-    firstValueFrom(this.rssFeedService.getById(feedId))
-      .then((feed) => {
-        this.rssFeed.set(feed);
-        firstValueFrom(this.rssFeedService.setLastReadToNow(feedId));
-      })
-      .catch((err) => {
-        console.error('Error loading feed:', err);
-        this.rssFeed.set(null);
-      })
-      .finally(() => this.isLoading.set(false));
+    effect(() => {
+      if (this.rssFeed.hasValue()) {
+        untracked(() =>
+          firstValueFrom(this.rssFeedService.setLastReadToNow(this.id())),
+        );
+      }
+    });
   }
 
-  getFeed = async (from: number, to: number): Promise<Article[]> => {
-    const feedId = this.route.snapshot.paramMap.get('id');
-    if (!feedId) return [];
-
-    return await firstValueFrom(
-      this.articleService.getPaginatedFeed(feedId, from, to)
-    );
-  };
+  getFeed = (from: number, to: number): Promise<Article[]> =>
+    firstValueFrom(this.articleService.getPaginatedFeed(this.id(), from, to));
 }

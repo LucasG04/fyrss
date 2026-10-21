@@ -1,12 +1,10 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Service } from '@angular/core';
 import { Tag } from '../../shared/types/tag';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ConfigService } from './config-service';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class TagService {
   private readonly configService = inject(ConfigService);
   private readonly http = inject(HttpClient);

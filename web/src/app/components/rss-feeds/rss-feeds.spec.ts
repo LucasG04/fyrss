@@ -1,32 +1,48 @@
 import { ConfigService } from '../../core/services/config-service';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RssFeeds } from './rss-feeds';
 
 describe('RssFeeds', () => {
-  let component: RssFeeds;
   let fixture: ComponentFixture<RssFeeds>;
+  let httpTesting: HttpTestingController;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  beforeEach(() => {
+    TestBed.configureTestingModule({
       imports: [RssFeeds],
       providers: [
-        provideZonelessChangeDetection(),
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ConfigService, useValue: { config: { apiUrl: '' } } },
       ],
-    }).compileComponents();
+    });
 
+    httpTesting = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(RssFeeds);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  afterEach(() => httpTesting.verify());
+
+  it('should list loaded feeds', async () => {
+    TestBed.tick();
+    httpTesting.expectOne('/feeds').flush([
+      {
+        id: '1',
+        name: 'Example',
+        url: 'https://example.com/feed.xml',
+        lastReadAt: '2026-01-01T00:00:00Z',
+        articleCount: 0,
+      },
+    ]);
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      'https://example.com/feed.xml',
+    );
   });
 });

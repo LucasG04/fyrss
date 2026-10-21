@@ -53,8 +53,8 @@ export class ArticleCard {
     await firstValueFrom(
       this.articleService.updateArticleSaved(
         this.article().id,
-        !this.article().save
-      )
+        !this.article().save,
+      ),
     );
     this.article.set({ ...this.article(), save: !this.article().save });
   }
@@ -70,7 +70,7 @@ export class ArticleCard {
 
   private async fetchLastReadAt(): Promise<void> {
     const updatedArticle = await firstValueFrom(
-      this.articleService.getById(this.article().id)
+      this.articleService.getById(this.article().id),
     );
     if (updatedArticle) {
       this.article.set({

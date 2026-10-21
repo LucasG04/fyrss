@@ -1,4 +1,3 @@
-import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ThemeToggle } from './theme-toggle';
 
@@ -7,14 +6,13 @@ describe('ThemeToggle', () => {
   let fixture: ComponentFixture<ThemeToggle>;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
+    TestBed.configureTestingModule({
       imports: [ThemeToggle],
-      providers: [provideZonelessChangeDetection()],
-    }).compileComponents();
+    });
 
     fixture = TestBed.createComponent(ThemeToggle);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {

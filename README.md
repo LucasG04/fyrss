@@ -18,3 +18,7 @@ cd web && npm ci && npm start                 # UI on :4200, proxies /api to :80
 ```
 
 Or open `fyrss.code-workspace` in VS Code.
+
+## Deployment
+
+The web container only server-renders requests for allowed hostnames ([SSRF protection](https://angular.dev/best-practices/security#preventing-server-side-request-forgery-ssrf)). Set `NG_ALLOWED_HOSTS` to the comma-separated hostnames it is served under, e.g. `NG_ALLOWED_HOSTS=rss.example.com`.

@@ -1,33 +1,21 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { computed, inject, PLATFORM_ID, Service } from '@angular/core';
 import { Config } from '../../shared/types/config';
-import { firstValueFrom } from 'rxjs';
-import { isPlatformServer } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class ConfigService {
-  private readonly platformId = inject(PLATFORM_ID);
-  private readonly http = inject(HttpClient);
-  private _config?: Config;
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly resource = httpResource<Config>(() =>
+    this.isBrowser ? '/config' : undefined,
+  );
+
+  readonly loaded = computed(() => this.resource.hasValue());
 
   get config(): Config {
-    if (!this._config) {
+    if (!this.resource.hasValue()) {
       throw new Error('Config not loaded');
     }
-    return this._config;
-  }
-
-  async load(): Promise<void> {
-    if (isPlatformServer(this.platformId)) {
-      return;
-    }
-    await firstValueFrom(this.http.get<Config>('/config'))
-      .then((config: Config) => (this._config = config))
-      .catch((error) => {
-        console.error('Failed to load config:', error);
-        throw error;
-      });
+    return this.resource.value();
   }
 }

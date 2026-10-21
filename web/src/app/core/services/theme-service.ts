@@ -1,17 +1,17 @@
 import {
-  Injectable,
   PLATFORM_ID,
   effect,
   inject,
   signal,
   computed,
+  Service,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ThemeMode } from '../../shared/types/theme-mode';
 
 const STORAGE_KEY = 'app:theme-mode';
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class ThemeService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);

@@ -96,7 +96,7 @@ export class ThemeToggle {
     if (isPlatformBrowser(this.platformId)) {
       const isMobile = window.matchMedia('(max-width: 640px)').matches;
       this.systemIcon.set(
-        isMobile ? 'eva-smartphone-outline' : 'eva-monitor-outline'
+        isMobile ? 'eva-smartphone-outline' : 'eva-monitor-outline',
       );
     }
   }

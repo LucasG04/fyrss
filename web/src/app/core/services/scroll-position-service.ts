@@ -1,20 +1,18 @@
-import { Injectable } from '@angular/core';
+import { Service } from '@angular/core';
 
 export interface ScrollPosition {
   x: number;
   y: number;
 }
 
-@Injectable({
-  providedIn: 'root',
-})
+@Service()
 export class ScrollPositionService {
   private readonly scrollPositions = new Map<string, ScrollPosition>();
 
   saveScrollPosition(key: string): void {
     const scrollPosition: ScrollPosition = {
-      x: window.scrollX || window.pageXOffset,
-      y: window.scrollY || window.pageYOffset,
+      x: window.scrollX,
+      y: window.scrollY,
     };
 
     this.scrollPositions.set(key, scrollPosition);

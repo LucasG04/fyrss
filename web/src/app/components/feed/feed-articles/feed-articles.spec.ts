@@ -1,37 +1,53 @@
 import { ConfigService } from '../../../core/services/config-service';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
-import { provideZonelessChangeDetection } from '@angular/core';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { FeedArticles } from './feed-articles';
 
 describe('FeedArticles', () => {
-  let component: FeedArticles;
   let fixture: ComponentFixture<FeedArticles>;
+  let httpTesting: HttpTestingController;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  beforeEach(() => {
+    TestBed.configureTestingModule({
       imports: [FeedArticles],
       providers: [
-        provideZonelessChangeDetection(),
-        {
-          provide: ActivatedRoute,
-          useValue: { snapshot: { paramMap: convertToParamMap({ id: '1' }) } },
-        },
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ConfigService, useValue: { config: { apiUrl: '' } } },
       ],
-    }).compileComponents();
+    });
 
+    httpTesting = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(FeedArticles);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    fixture.componentRef.setInput('id', '1');
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  afterEach(() => httpTesting.verify());
+
+  it('should show the feed and mark it as read', async () => {
+    TestBed.tick();
+    httpTesting.expectOne('/feeds/1').flush({
+      id: '1',
+      name: 'Example',
+      url: 'https://example.com/feed.xml',
+      lastReadAt: '2026-01-01T00:00:00Z',
+      articleCount: 0,
+    });
+    // httpResource settles asynchronously; the follow-up requests start once it has
+    await vi.waitFor(() => {
+      TestBed.tick();
+      httpTesting.expectOne('/feeds/1/read').flush(null);
+    });
+    httpTesting.expectOne('/feeds/1/paginated?from=0&to=20').flush([]);
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('h1').textContent).toBe(
+      'Example',
+    );
   });
 });

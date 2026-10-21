@@ -3,7 +3,7 @@
   "extends": ["config:best-practices", ":timezone(Europe/Berlin)"],
   "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
   "constraints": {
-    "npm": "^10"
+    "npm": "^11"
   },
   "packageRules": [
     { "matchFileNames": ["server/**"], "addLabels": ["server"] },

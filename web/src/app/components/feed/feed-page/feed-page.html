@@ -1,9 +1,9 @@
 <div class="flex flex-col items-center justify-center gap-4 mx-4">
-  @if (isLoading()) {
+  @if (feeds.isLoading()) {
     <app-loader class="py-6" />
   } @else {
     <!-- Feed list -->
-    @for (feed of feeds(); track feed.id) {
+    @for (feed of feeds.hasValue() ? feeds.value() : []; track feed.id) {
       <div class="max-w-5xl w-full cursor-pointer" (click)="goToFeed(feed.id)">
         <div
           class="bg-main rounded-xl shadow-sm dark:shadow-none p-4 mx-auto w-full border border-main"
@@ -52,11 +52,11 @@
     }
 
     <!-- Error message -->
-    @if (hasError()) {
+    @if (feeds.error()) {
       <div class="py-4 flex flex-col items-center gap-4">
         <p class="text-red-500">Failed to load feeds</p>
         <button
-          (click)="loadFeeds()"
+          (click)="feeds.reload()"
           class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
         >
           <i class="eva eva-refresh" style="font-size: larger"></i>

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, resource } from '@angular/core';
 import { ArticleService } from '../../../core/services/article-service';
 import { Article } from '../../../shared/types/article';
 import { firstValueFrom } from 'rxjs';
@@ -30,9 +30,22 @@ export class FeedPage {
   private readonly router = inject(Router);
   private readonly scrollPositionService = inject(ScrollPositionService);
 
-  feeds = signal<RssFeedWithArticles[]>([]);
-  isLoading = signal(true);
-  hasError = signal(false);
+  readonly feeds = resource({
+    loader: async () => {
+      const feeds = await firstValueFrom(this.feedService.getAll());
+      const articlesPerFeed = await Promise.all(
+        feeds.map((feed) =>
+          firstValueFrom(this.articleService.getPaginatedFeed(feed.id, 0, 5)),
+        ),
+      );
+      return this.sortFeedsByRecencyAndRarity(
+        feeds.map((feed, idx) => ({
+          ...feed,
+          articles: articlesPerFeed[idx] ?? [],
+        })),
+      );
+    },
+  });
 
   private readonly SCROLL_POSITION_KEY = 'feed-page';
   // Frequency-adjusted recency scoring parameters
@@ -42,7 +55,13 @@ export class FeedPage {
   private readonly MIN_ARTICLES_FOR_FREQUENCY = 3; // minimum articles needed to calculate frequency
 
   constructor() {
-    this.loadFeeds();
+    effect(() => {
+      if (this.feeds.hasValue()) {
+        this.scrollPositionService.restoreScrollPosition(
+          this.SCROLL_POSITION_KEY,
+        );
+      }
+    });
   }
 
   goToFeed(feedId: string): void {
@@ -54,45 +73,12 @@ export class FeedPage {
     return feed.articles.some(
       (article) =>
         new Date(article.publishedAt).getTime() >
-        new Date(feed.lastReadAt).getTime()
+        new Date(feed.lastReadAt).getTime(),
     );
   }
 
   goToRssFeedManagement(): void {
     this.router.navigate(['/rss-feeds']);
-  }
-
-  async loadFeeds(): Promise<void> {
-    this.isLoading.set(true);
-    this.hasError.set(false);
-
-    firstValueFrom(this.feedService.getAll())
-      .then(async (feeds) => {
-        const articlesPerFeed = await Promise.all(
-          feeds.map((feed) =>
-            firstValueFrom(this.articleService.getPaginatedFeed(feed.id, 0, 5))
-          )
-        );
-
-        const feedsWithArticles: RssFeedWithArticles[] = feeds.map(
-          (feed, idx) => ({
-            ...feed,
-            articles: articlesPerFeed[idx] ?? [],
-          })
-        );
-
-        const sorted = this.sortFeedsByRecencyAndRarity(feedsWithArticles);
-        this.feeds.set(sorted);
-      })
-      .catch(() => this.hasError.set(true))
-      .finally(() => {
-        this.isLoading.set(false);
-        if (!this.hasError()) {
-          this.scrollPositionService.restoreScrollPosition(
-            this.SCROLL_POSITION_KEY
-          );
-        }
-      });
   }
 
   /**
@@ -102,7 +88,7 @@ export class FeedPage {
    * high-frequency news feeds from overwhelming newsletters.
    */
   private sortFeedsByRecencyAndRarity(
-    feeds: RssFeedWithArticles[]
+    feeds: RssFeedWithArticles[],
   ): RssFeedWithArticles[] {
     return feeds
       .map((f) => ({
@@ -225,7 +211,7 @@ export class FeedPage {
     if (pastOrPresent.length > 0) {
       return pastOrPresent.reduce(
         (latest, d) => (d.getTime() > latest.getTime() ? d : latest),
-        new Date(0)
+        new Date(0),
       );
     }
 

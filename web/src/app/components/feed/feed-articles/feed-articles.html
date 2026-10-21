@@ -1,8 +1,9 @@
-@if (isLoading()) {
+@if (rssFeed.isLoading()) {
   <div class="flex justify-center py-6">
     <app-loader />
   </div>
-} @else if (rssFeed()) {
+} @else if (rssFeed.hasValue()) {
+  @let feed = rssFeed.value();
   <div class="mx-4 mb-4 flex flex-col">
     <div class="max-w-5xl w-full mx-auto flex justify-between items-center">
       <div class="flex items-center gap-2">
@@ -13,13 +14,13 @@
         >
           <i class="eva eva-chevron-left-outline" style="font-size: larger"></i>
         </button>
-        <h1 class="text-main text-xl font-bold">{{ rssFeed()!.name }}</h1>
+        <h1 class="text-main text-xl font-bold">{{ feed.name }}</h1>
       </div>
       <span
         class="border-2 rounded-sm px-1.5 py-0.5 font-mono text-gray-500 font-bold"
         style="font-size: small"
       >
-        {{ rssFeed()!.articleCount }}
+        {{ feed.articleCount }}
       </span>
     </div>
   </div>
