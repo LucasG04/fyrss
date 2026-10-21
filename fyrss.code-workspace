@@ -1,0 +1,13 @@
+{
+  "folders": [
+    { "name": "root", "path": "." },
+    { "name": "server", "path": "server" },
+    { "name": "web", "path": "web" }
+  ],
+  "settings": {
+    "files.exclude": { "server": true, "web": true }
+  },
+  "extensions": {
+    "recommendations": ["golang.go", "angular.ng-template"]
+  }
+}

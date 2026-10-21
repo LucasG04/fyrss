@@ -1,16 +1,20 @@
-# ForYou RSS Web
+# FY RSS
 
-A modern, responsive RSS feed reader built with Angular 20. ForYou RSS helps you stay up-to-date with your favorite content sources through an intuitive web interface.
+**FY RSS** (For You RSS) is a minimalistic, self-hosted RSS feed aggregator.
 
-For further information and a guide on how to self host this application see [LucasG04/fyrss-web/wiki](https://github.com/LucasG04/fyrss-web/wiki).
+| Folder | Description |
+| --- | --- |
+| [`server/`](server) | Go REST API that fetches and stores feeds and articles in PostgreSQL |
+| [`web/`](web) | Angular (SSR) frontend |
 
-## Features
+Self-hosting guide and architecture: [wiki](https://github.com/LucasG04/fyrss/wiki).
 
-- **RSS Feed Management** - Add, edit, and delete RSS feeds
-- **Smart Feed Organization** - Feeds sorted by relevance and activity
-- **Article Reading** - Clean, distraction-free article viewing
-- **Save Articles** - Bookmark articles for later reading
-- **Reading History** - Track your reading progress
-- **Dark/Light Theme** - Toggle between themes
-- **Responsive Design** - Works on desktop, tablet, and mobile
-- **Server-Side Rendering** - Fast initial page loads
+## Development
+
+```sh
+docker compose up -d                          # PostgreSQL on :5432
+cd server && go run ./cmd/fyrss-server        # API on :8080 (reads .env.dev)
+cd web && npm ci && npm start                 # UI on :4200, proxies /api to :8080
+```
+
+Or open `fyrss.code-workspace` in VS Code.
