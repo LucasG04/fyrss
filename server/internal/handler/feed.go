@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/lucasg04/fyrss-server/internal/handlerutil"
-	"github.com/lucasg04/fyrss-server/internal/model"
-	"github.com/lucasg04/fyrss-server/internal/service"
+	"github.com/lucasg04/fyrss/server/internal/handlerutil"
+	"github.com/lucasg04/fyrss/server/internal/model"
+	"github.com/lucasg04/fyrss/server/internal/service"
 )
 
 type FeedHandler struct {

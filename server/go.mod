@@ -1,4 +1,4 @@
-module github.com/lucasg04/fyrss-server
+module github.com/lucasg04/fyrss/server
 
 go 1.24.5
 

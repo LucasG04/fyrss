@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/lucasg04/fyrss-server/internal/model"
+	"github.com/lucasg04/fyrss/server/internal/model"
 )
 
 // TestFeedArticleRelationship demonstrates the 1:m relationship between feeds and articles

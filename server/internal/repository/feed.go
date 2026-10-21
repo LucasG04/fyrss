@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/lucasg04/fyrss-server/internal/model"
+	"github.com/lucasg04/fyrss/server/internal/model"
 )
 
 type FeedRepository struct {

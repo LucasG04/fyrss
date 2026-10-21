@@ -2,7 +2,7 @@
 
 A modern, responsive RSS feed reader built with Angular 20. ForYou RSS helps you stay up-to-date with your favorite content sources through an intuitive web interface.
 
-For further information and a guide on how to self host this application see [LucasG04/fyrss-web/wiki](https://github.com/LucasG04/fyrss-web/wiki).
+For further information and a guide on how to self host this application see [LucasG04/fyrss/wiki](https://github.com/LucasG04/fyrss/wiki).
 
 ## Features
 

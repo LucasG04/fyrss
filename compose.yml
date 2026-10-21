@@ -1,4 +1,5 @@
-# start with `docker-compose -f dev-compose.yml up`
+# start with `docker compose up` (from repo root)
+name: fyrss
 services:
   postgres:
     container_name: fyrss_postgres
@@ -9,7 +10,7 @@ services:
       PGDATA: /data/postgres
     volumes:
       - db-fyrss:/data/postgres
-      - ./db/init:/docker-entrypoint-initdb.d
+      - ./server/db/init:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
   # fyrss-server:
@@ -20,8 +21,8 @@ services:
   #   depends_on:
   #     - postgres
   #   env_file:
-  #     - .env.dev
-  #     - .env.secrets
+  #     - server/.env.dev
+  #     - server/.env.secrets
   #   environment:
   #     - DATABASE_URL=postgres://postgres:changeme@postgres:5432/fyrss?sslmode=disable
 

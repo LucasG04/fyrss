@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lucasg04/fyrss-server/internal/model"
-	"github.com/lucasg04/fyrss-server/internal/repository"
+	"github.com/lucasg04/fyrss/server/internal/model"
+	"github.com/lucasg04/fyrss/server/internal/repository"
 )
 
 // TestValidateRSSFeed_ValidFeed tests RSS validation with a known working RSS feed

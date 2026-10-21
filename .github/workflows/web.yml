@@ -1,8 +1,10 @@
 name: Build app
 on:
   pull_request:
+    paths: [ 'web/**', '.github/workflows/web.yml' ]
   push:
     branches: [ main ]
+    paths: [ 'web/**', '.github/workflows/web.yml' ]
 
 jobs:
   build:
@@ -25,8 +27,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: web
           push: ${{ github.event_name != 'pull_request' }}
           tags: ghcr.io/lucasg04/fyrss-web:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web

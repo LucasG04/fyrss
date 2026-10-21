@@ -2,7 +2,7 @@
 
 A Go backend for automated curation of news and blog articles via RSS. Content is categorized, prioritized, and made accessible via a REST API. The backend is fully stateless and uses an external database (e.g., PostgreSQL in a container).
 
-For further information see [LucasG04/fyrss-web/wiki](https://github.com/LucasG04/fyrss-web/wiki).
+For further information see [LucasG04/fyrss/wiki](https://github.com/LucasG04/fyrss/wiki).
 
 ## Features
 
