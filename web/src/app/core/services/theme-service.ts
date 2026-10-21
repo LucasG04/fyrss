@@ -1,24 +1,13 @@
-import {
-  PLATFORM_ID,
-  effect,
-  inject,
-  signal,
-  computed,
-  Service,
-} from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { effect, signal, computed, Service } from '@angular/core';
 import { ThemeMode } from '../../shared/types/theme-mode';
 
 const STORAGE_KEY = 'app:theme-mode';
 
 @Service()
 export class ThemeService {
-  private readonly platformId = inject(PLATFORM_ID);
-  private readonly isBrowser = isPlatformBrowser(this.platformId);
-
   /** Media query for OS-level dark scheme */
   private readonly mql: MediaQueryList | null =
-    this.isBrowser && 'matchMedia' in window
+    'matchMedia' in window
       ? window.matchMedia('(prefers-color-scheme: dark)')
       : null;
 
@@ -47,14 +36,15 @@ export class ThemeService {
 
     // Apply/remove .dark on <html> when the effective theme changes
     effect(() => {
-      if (!this.isBrowser) return;
       const dark = this.effectiveDark();
       document.documentElement.classList.toggle('dark', dark);
+      document
+        .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
+        .forEach((m) => (m.content = dark ? '#0f172a' : '#ffffff'));
     });
 
     // Persist only the selected mode
     effect(() => {
-      if (!this.isBrowser) return;
       try {
         localStorage.setItem(STORAGE_KEY, this.mode());
       } catch (e) {
@@ -69,7 +59,6 @@ export class ThemeService {
   }
 
   private readStoredMode(): ThemeMode {
-    if (!this.isBrowser) return 'system';
     try {
       const v = localStorage.getItem(STORAGE_KEY);
       return v === 'light' || v === 'dark' || v === 'system' ? v : 'system';

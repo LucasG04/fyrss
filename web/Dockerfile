@@ -20,17 +20,11 @@ COPY . .
 RUN npm run build
 
 # --- Runtime stage ---
-FROM node:24-bookworm-slim AS runtime
-WORKDIR /app
-ENV NODE_ENV=production \
-  PORT=4000
+FROM nginxinc/nginx-unprivileged:1.31-alpine AS runtime
+ENV PORT=4000 \
+  API_URL=/api
 
-# Copy built artifacts from build stage
-COPY --from=build /app/dist ./dist
-
-# Run as non-root user
-USER node
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY --from=build /app/dist/fyrss-web/browser /usr/share/nginx/html
 
 EXPOSE 4000
-
-CMD ["node", "dist/fyrss-web/server/server.mjs"]

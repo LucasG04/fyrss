@@ -5,7 +5,7 @@
 | Folder | Description |
 | --- | --- |
 | [`server/`](server) | Go REST API that fetches and stores feeds and articles in PostgreSQL |
-| [`web/`](web) | Angular (SSR) frontend |
+| [`web/`](web) | Angular frontend, installable as a PWA |
 
 Self-hosting guide and architecture: [wiki](https://github.com/LucasG04/fyrss/wiki).
 
@@ -21,4 +21,4 @@ Or open `fyrss.code-workspace` in VS Code.
 
 ## Deployment
 
-The web container only server-renders requests for allowed hostnames ([SSRF protection](https://angular.dev/best-practices/security#preventing-server-side-request-forgery-ssrf)). Set `NG_ALLOWED_HOSTS` to the comma-separated hostnames it is served under, e.g. `NG_ALLOWED_HOSTS=rss.example.com`.
+The web container serves the static app with nginx on port `4000`. Set `API_URL` to where the browser reaches the API (default `/api`, i.e. a reverse proxy routes `/api` to the server on the same origin). The PWA's service worker only registers over HTTPS (or `localhost`).

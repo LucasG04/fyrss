@@ -13,4 +13,4 @@ For further information and a guide on how to self host this application see [Lu
 - **Reading History** - Track your reading progress
 - **Dark/Light Theme** - Toggle between themes
 - **Responsive Design** - Works on desktop, tablet, and mobile
-- **Server-Side Rendering** - Fast initial page loads
+- **Installable PWA** - Add to your home screen; recently viewed articles stay readable offline

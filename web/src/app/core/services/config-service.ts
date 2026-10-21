@@ -1,14 +1,10 @@
 import { httpResource } from '@angular/common/http';
-import { computed, inject, PLATFORM_ID, Service } from '@angular/core';
+import { computed, Service } from '@angular/core';
 import { Config } from '../../shared/types/config';
-import { isPlatformBrowser } from '@angular/common';
 
 @Service()
 export class ConfigService {
-  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
-  private readonly resource = httpResource<Config>(() =>
-    this.isBrowser ? '/config' : undefined,
-  );
+  private readonly resource = httpResource<Config>(() => '/config.json');
 
   readonly loaded = computed(() => this.resource.hasValue());
 
