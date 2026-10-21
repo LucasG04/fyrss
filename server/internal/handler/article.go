@@ -1,13 +1,11 @@
 package handler
 
 import (
-	"fmt"
-	"net/http"
-	"strconv"
+	"context"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
-	"github.com/lucasg04/fyrss/server/internal/handlerutil"
+	"github.com/lucasg04/fyrss/server/internal/model"
 	"github.com/lucasg04/fyrss/server/internal/service"
 )
 
@@ -19,140 +17,101 @@ func NewArticleHandler(svc *service.ArticleService) *ArticleHandler {
 	return &ArticleHandler{svc: *svc}
 }
 
-func (h *ArticleHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	articles, err := h.svc.GetAll(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	handlerutil.JsonResponse(w, articles)
+type ArticleIDInput struct {
+	ID uuid.UUID `path:"id" doc:"Article ID"`
 }
 
-func (h *ArticleHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		http.Error(w, "Invalid article ID", http.StatusBadRequest)
-		return
-	}
-
-	article, err := h.svc.GetByID(r.Context(), id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
-		return
-	}
-
-	handlerutil.JsonResponse(w, article)
+type PaginationInput struct {
+	From int `query:"from" required:"true" minimum:"0" doc:"Start index (inclusive)"`
+	To   int `query:"to" required:"true" minimum:"1" doc:"End index (exclusive), must be greater than from"`
 }
 
-func (h *ArticleHandler) GetHistory(w http.ResponseWriter, r *http.Request) {
-	from, to, err := getPaginationParams(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	articles, err := h.svc.GetHistoryPaginated(r.Context(), from, to)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	handlerutil.JsonResponse(w, articles)
+type FeedArticlesInput struct {
+	FeedID uuid.UUID `path:"feedId" doc:"Feed ID"`
+	PaginationInput
 }
 
-func (h *ArticleHandler) GetSaved(w http.ResponseWriter, r *http.Request) {
-	from, to, err := getPaginationParams(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	articles, err := h.svc.GetSavedPaginated(r.Context(), from, to)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	handlerutil.JsonResponse(w, articles)
+type UpdateSavedInput struct {
+	ID    uuid.UUID `path:"id" doc:"Article ID"`
+	Saved bool      `query:"saved" doc:"Whether the article is saved"`
 }
 
-func (h *ArticleHandler) UpdateSavedByID(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		http.Error(w, "Invalid article ID", http.StatusBadRequest)
-		return
-	}
-
-	saved, err := handlerutil.GetRequestParamBool(r, "saved")
-	if err != nil {
-		http.Error(w, "Invalid saved parameter", http.StatusBadRequest)
-		return
-	}
-
-	err = h.svc.UpdateSavedByID(r.Context(), id, saved)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
+type ArticleOutput struct {
+	Body *model.Article
 }
 
-func (h *ArticleHandler) UpdateReadByID(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		http.Error(w, "Invalid article ID", http.StatusBadRequest)
-		return
-	}
-
-	err = h.svc.UpdateReadByID(r.Context(), id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
+type ArticlesOutput struct {
+	Body []*model.Article
 }
 
-func (h *ArticleHandler) GetPaginatedByFeedID(w http.ResponseWriter, r *http.Request) {
-	feedIDStr := chi.URLParam(r, "feedId")
-	feedID, err := uuid.Parse(feedIDStr)
+func (h *ArticleHandler) GetAll(ctx context.Context, _ *struct{}) (*ArticlesOutput, error) {
+	articles, err := h.svc.GetAll(ctx)
 	if err != nil {
-		http.Error(w, "Invalid feed ID", http.StatusBadRequest)
-		return
-	}
-	from, to, err := getPaginationParams(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return nil, err
 	}
 
-	articles, err := h.svc.GetPaginatedByFeedID(r.Context(), feedID, from, to)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	handlerutil.JsonResponse(w, articles)
+	return &ArticlesOutput{Body: articles}, nil
 }
 
-func getPaginationParams(r *http.Request) (int, int, error) {
-	fromStr := r.URL.Query().Get("from")
-	toStr := r.URL.Query().Get("to")
-
-	if fromStr == "" || toStr == "" {
-		return 0, 0, fmt.Errorf("missing pagination parameters: from=%s, to=%s", fromStr, toStr)
+func (h *ArticleHandler) GetByID(ctx context.Context, input *ArticleIDInput) (*ArticleOutput, error) {
+	article, err := h.svc.GetByID(ctx, input.ID)
+	if err != nil {
+		return nil, huma.Error404NotFound(err.Error())
 	}
 
-	from, errFrom := strconv.Atoi(fromStr)
-	to, errTo := strconv.Atoi(toStr)
-	if errFrom != nil || errTo != nil || from < 0 || to <= from {
-		return 0, 0, fmt.Errorf("invalid pagination parameters: from=%s, to=%s", fromStr, toStr)
+	return &ArticleOutput{Body: article}, nil
+}
+
+func (h *ArticleHandler) GetHistory(ctx context.Context, input *PaginationInput) (*ArticlesOutput, error) {
+	if err := input.validate(); err != nil {
+		return nil, err
 	}
 
-	return from, to, nil
+	articles, err := h.svc.GetHistoryPaginated(ctx, input.From, input.To)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ArticlesOutput{Body: articles}, nil
+}
+
+func (h *ArticleHandler) GetSaved(ctx context.Context, input *PaginationInput) (*ArticlesOutput, error) {
+	if err := input.validate(); err != nil {
+		return nil, err
+	}
+
+	articles, err := h.svc.GetSavedPaginated(ctx, input.From, input.To)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ArticlesOutput{Body: articles}, nil
+}
+
+func (h *ArticleHandler) UpdateSavedByID(ctx context.Context, input *UpdateSavedInput) (*struct{}, error) {
+	return nil, h.svc.UpdateSavedByID(ctx, input.ID, input.Saved)
+}
+
+func (h *ArticleHandler) UpdateReadByID(ctx context.Context, input *ArticleIDInput) (*struct{}, error) {
+	return nil, h.svc.UpdateReadByID(ctx, input.ID)
+}
+
+func (h *ArticleHandler) GetPaginatedByFeedID(ctx context.Context, input *FeedArticlesInput) (*ArticlesOutput, error) {
+	if err := input.validate(); err != nil {
+		return nil, err
+	}
+
+	articles, err := h.svc.GetPaginatedByFeedID(ctx, input.FeedID, input.From, input.To)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ArticlesOutput{Body: articles}, nil
+}
+
+func (p *PaginationInput) validate() error {
+	if p.To <= p.From {
+		return huma.Error400BadRequest("to must be greater than from")
+	}
+	return nil
 }

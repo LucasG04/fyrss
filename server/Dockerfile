@@ -3,7 +3,7 @@
 # Build: DOCKER_BUILDKIT=1 docker build -t fyrss-server .
 
 ## Build stage
-FROM golang:1.24 AS builder
+FROM golang:1.27 AS builder
 
 WORKDIR /src
 

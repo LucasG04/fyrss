@@ -13,6 +13,13 @@ For further information see [LucasG04/fyrss/wiki](https://github.com/LucasG04/fy
 - Configuration via ENV variables
 - Completely stateless
 
+## API
+
+The REST API is built with [Huma](https://huma.rocks), which generates the OpenAPI spec from the Go handlers:
+
+- `/api/openapi.json` (or `.yaml`): OpenAPI 3.1 spec
+- `/api/docs`: interactive API docs
+
 ## ENV Configuration
 
 | Variable               | Description                       |

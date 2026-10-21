@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jmoiron/sqlx"
@@ -57,8 +59,17 @@ func startServer(articleService *service.ArticleService, feedService *service.Fe
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	setupArticleHttpHandler(r, articleService)
-	setupFeedHttpHandler(r, feedService, articleService)
+	config := huma.DefaultConfig("fyrss API", "1.0.0")
+	config.Info.Description = "API of fyrss, an RSS reader that collects articles from configured feeds."
+	config.OpenAPIPath = "/api/openapi"
+	config.DocsPath = "/api/docs"
+	config.SchemasPath = "/api/schemas"
+	// keep responses free of the $schema field and Link header
+	config.CreateHooks = nil
+	api := humachi.New(r, config)
+
+	setupArticleHttpHandler(api, articleService)
+	setupFeedHttpHandler(api, feedService, articleService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -71,33 +82,76 @@ func startServer(articleService *service.ArticleService, feedService *service.Fe
 	}
 }
 
-func setupArticleHttpHandler(r *chi.Mux, articleService *service.ArticleService) {
+func setupArticleHttpHandler(api huma.API, articleService *service.ArticleService) {
 	articleHandler := handler.NewArticleHandler(articleService)
+	tags := []string{"Articles"}
 
-	r.Route("/api/articles", func(r chi.Router) {
-		r.Get("/", articleHandler.GetAll)
-		r.Get("/history", articleHandler.GetHistory)
-		r.Get("/saved", articleHandler.GetSaved)
-
-		r.Get("/{id}", articleHandler.GetByID)
-		r.Patch("/{id}/saved", articleHandler.UpdateSavedByID)
-		r.Patch("/{id}/read", articleHandler.UpdateReadByID)
-	})
+	huma.Register(api, huma.Operation{
+		OperationID: "list-articles", Method: http.MethodGet, Path: "/api/articles", Tags: tags,
+		Summary: "List all articles",
+	}, articleHandler.GetAll)
+	huma.Register(api, huma.Operation{
+		OperationID: "list-article-history", Method: http.MethodGet, Path: "/api/articles/history", Tags: tags,
+		Summary:     "List read articles",
+		Description: "Articles that have been read, most recently read first, limited to the range [from, to).",
+	}, articleHandler.GetHistory)
+	huma.Register(api, huma.Operation{
+		OperationID: "list-saved-articles", Method: http.MethodGet, Path: "/api/articles/saved", Tags: tags,
+		Summary:     "List saved articles",
+		Description: "Articles marked as saved, limited to the range [from, to).",
+	}, articleHandler.GetSaved)
+	huma.Register(api, huma.Operation{
+		OperationID: "get-article", Method: http.MethodGet, Path: "/api/articles/{id}", Tags: tags,
+		Summary: "Get an article",
+	}, articleHandler.GetByID)
+	huma.Register(api, huma.Operation{
+		OperationID: "set-article-saved", Method: http.MethodPatch, Path: "/api/articles/{id}/saved", Tags: tags,
+		Summary: "Save or unsave an article",
+	}, articleHandler.UpdateSavedByID)
+	huma.Register(api, huma.Operation{
+		OperationID: "mark-article-read", Method: http.MethodPatch, Path: "/api/articles/{id}/read", Tags: tags,
+		Summary: "Mark an article as read",
+	}, articleHandler.UpdateReadByID)
 }
 
-func setupFeedHttpHandler(r *chi.Mux, feedService *service.FeedService, articleService *service.ArticleService) {
+func setupFeedHttpHandler(api huma.API, feedService *service.FeedService, articleService *service.ArticleService) {
 	feedHandler := handler.NewFeedHandler(feedService)
 	articleHandler := handler.NewArticleHandler(articleService)
+	tags := []string{"Feeds"}
 
-	r.Route("/api/feeds", func(r chi.Router) {
-		r.Get("/", feedHandler.GetAll)
-		r.Get("/{id}", feedHandler.GetByID)
-		r.Post("/", feedHandler.Create)
-		r.Put("/{id}", feedHandler.Update)
-		r.Delete("/{id}", feedHandler.Delete)
-		r.Patch("/{id}/read", feedHandler.UpdateLastReadAt)
-		r.Get("/{feedId}/paginated", articleHandler.GetPaginatedByFeedID)
-	})
+	huma.Register(api, huma.Operation{
+		OperationID: "list-feeds", Method: http.MethodGet, Path: "/api/feeds", Tags: tags,
+		Summary: "List all feeds",
+	}, feedHandler.GetAll)
+	huma.Register(api, huma.Operation{
+		OperationID: "get-feed", Method: http.MethodGet, Path: "/api/feeds/{id}", Tags: tags,
+		Summary: "Get a feed",
+	}, feedHandler.GetByID)
+	huma.Register(api, huma.Operation{
+		OperationID: "create-feed", Method: http.MethodPost, Path: "/api/feeds", Tags: tags,
+		Summary:       "Create a feed",
+		Description:   "The URL must return a valid RSS/Atom feed and must not already exist. Its articles are fetched right after creation.",
+		DefaultStatus: http.StatusCreated,
+	}, feedHandler.Create)
+	huma.Register(api, huma.Operation{
+		OperationID: "update-feed", Method: http.MethodPut, Path: "/api/feeds/{id}", Tags: tags,
+		Summary:     "Update a feed",
+		Description: "The URL must return a valid RSS/Atom feed and must not belong to another feed.",
+	}, feedHandler.Update)
+	huma.Register(api, huma.Operation{
+		OperationID: "delete-feed", Method: http.MethodDelete, Path: "/api/feeds/{id}", Tags: tags,
+		Summary:     "Delete a feed",
+		Description: "Articles of the feed are kept, their feedId is set to null.",
+	}, feedHandler.Delete)
+	huma.Register(api, huma.Operation{
+		OperationID: "mark-feed-read", Method: http.MethodPatch, Path: "/api/feeds/{id}/read", Tags: tags,
+		Summary: "Mark a feed as read",
+	}, feedHandler.UpdateLastReadAt)
+	huma.Register(api, huma.Operation{
+		OperationID: "list-feed-articles", Method: http.MethodGet, Path: "/api/feeds/{feedId}/paginated", Tags: tags,
+		Summary:     "List articles of a feed",
+		Description: "Articles of the feed, limited to the range [from, to).",
+	}, articleHandler.GetPaginatedByFeedID)
 }
 
 func runMigrations(dbUrl string) {
