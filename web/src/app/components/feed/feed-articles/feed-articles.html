@@ -30,15 +30,28 @@
     class="flex flex-col items-center justify-center h-full text-center px-4"
   >
     <i class="eva eva-alert-triangle-outline" style="font-size: 4rem"></i>
-    <h2 class="text-main text-2xl font-bold mt-4">Feed not found</h2>
-    <p class="text-gray-600 mt-2">
-      The feed you are looking for does not exist or has been removed.
-    </p>
-    <button
-      (click)="location.back()"
-      class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
-    >
-      Go Back
-    </button>
+    @if (notFound()) {
+      <h2 class="text-main text-2xl font-bold mt-4">Feed not found</h2>
+      <p class="text-gray-600 mt-2">
+        The feed you are looking for does not exist or has been removed.
+      </p>
+      <button
+        (click)="location.back()"
+        class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+      >
+        Go Back
+      </button>
+    } @else {
+      <h2 class="text-main text-2xl font-bold mt-4">Couldn't load feed</h2>
+      <p class="text-gray-600 mt-2">
+        Check your connection and try again.
+      </p>
+      <button
+        (click)="rssFeed.reload()"
+        class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+      >
+        Retry
+      </button>
+    }
   </div>
 }

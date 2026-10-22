@@ -51,7 +51,7 @@ func (h *FeedHandler) GetAll(ctx context.Context, _ *struct{}) (*FeedsOutput, er
 func (h *FeedHandler) GetByID(ctx context.Context, input *FeedIDInput) (*FeedOutput, error) {
 	feed, err := h.svc.GetByID(ctx, input.ID)
 	if err != nil {
-		return nil, huma.Error404NotFound(err.Error())
+		return nil, feedError(err)
 	}
 
 	return &FeedOutput{Body: feed}, nil

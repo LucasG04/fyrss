@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/url"
@@ -47,10 +48,13 @@ func (s *FeedService) GetAll(ctx context.Context) ([]*model.Feed, error) {
 
 func (s *FeedService) GetByID(ctx context.Context, id uuid.UUID) (*model.Feed, error) {
 	if id == uuid.Nil {
-		return nil, fmt.Errorf("invalid feed ID: %s", id)
+		return nil, ErrFeedNotFound
 	}
 
 	feed, err := s.repo.GetByID(ctx, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrFeedNotFound
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get feed with ID %s: %w", id, err)
 	}

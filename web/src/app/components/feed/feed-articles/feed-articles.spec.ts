@@ -50,4 +50,16 @@ describe('FeedArticles', () => {
       'Example',
     );
   });
+
+  it('should offer a retry instead of "not found" when loading fails', async () => {
+    TestBed.tick();
+    httpTesting
+      .expectOne('/feeds/1')
+      .flush(null, { status: 504, statusText: 'Gateway Timeout' });
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('h2').textContent).toBe(
+      "Couldn't load feed",
+    );
+  });
 });

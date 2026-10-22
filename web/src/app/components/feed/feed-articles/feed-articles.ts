@@ -1,4 +1,12 @@
-import { Component, effect, inject, input, untracked } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  untracked,
+} from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ArticleService } from '../../../core/services/article-service';
 import { firstValueFrom } from 'rxjs';
 import { Article } from '../../../shared/types/article';
@@ -22,6 +30,12 @@ export class FeedArticles {
   readonly id = input.required<string>();
 
   readonly rssFeed = this.rssFeedService.byIdResource(this.id);
+
+  /** Only a 404 means the feed is gone; other errors (e.g. offline PWA) are retryable. */
+  readonly notFound = computed(() => {
+    const error = this.rssFeed.error();
+    return error instanceof HttpErrorResponse && error.status === 404;
+  });
 
   constructor() {
     effect(() => {
