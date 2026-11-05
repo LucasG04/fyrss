@@ -4,7 +4,7 @@
 # Run:   docker run -p 4000:4000 fyrss-web
 
 # --- Build stage ---
-FROM node:24-bookworm-slim AS build
+FROM node:26-bookworm-slim@sha256:add5c17c14752c54d2f3d519ec46a3815684d41c33f198bcb09fb998f7dcbf68 AS build
 WORKDIR /app
 ENV NG_CLI_ANALYTICS=false
 
