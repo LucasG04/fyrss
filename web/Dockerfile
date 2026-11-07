@@ -4,7 +4,7 @@
 # Run:   docker run -p 4000:4000 fyrss-web
 
 # --- Build stage ---
-FROM node:24-bookworm-slim AS build
+FROM node:24-bookworm-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9 AS build
 WORKDIR /app
 ENV NG_CLI_ANALYTICS=false
 
@@ -20,7 +20,7 @@ COPY . .
 RUN npm run build
 
 # --- Runtime stage ---
-FROM nginxinc/nginx-unprivileged:1.31-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.31-alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e AS runtime
 ENV PORT=4000 \
   API_URL=/api
 
