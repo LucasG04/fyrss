@@ -3,7 +3,7 @@
 # Build: DOCKER_BUILDKIT=1 docker build -t fyrss-server .
 
 ## Build stage
-FROM golang:1.27 AS builder
+FROM golang:1.27@sha256:ec47ea3725fea0cc88f6de94919aef19f40f12fc1ec0e2d1b3426dbf15ecca04 AS builder
 
 WORKDIR /src
 
@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     go build -trimpath -ldflags "-s -w" -o /out/fyrss-server ./cmd/fyrss-server
 
 ## Runtime stage (distroless, non-root, includes CA certs)
-FROM gcr.io/distroless/base-debian12:nonroot AS runtime
+FROM gcr.io/distroless/base-debian12:nonroot@sha256:7f0c72cd138b442ae0deeb69c08b1acf5525439ba251a49ad93c320a061567e5 AS runtime
 
 WORKDIR /app
 
