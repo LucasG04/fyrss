@@ -3,7 +3,7 @@ name: fyrss
 services:
   postgres:
     container_name: fyrss_postgres
-    image: postgres:17
+    image: postgres:17@sha256:97fb53376be3e4fb1a8a61421daa69dcc3bf2fa39bda3259f5245f9a455af1a9
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: changeme
